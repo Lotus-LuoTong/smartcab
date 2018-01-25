@@ -45,8 +45,8 @@ class LearningAgent(Agent):
             self.epsilon = 0
         else:
             self.trial += 1.0
-            # self.epsilon = 1/(self.trial ** 2)
-            self.epsilon = 0.997 ** self.trial
+            # self.epsilon = 0.997 ** self.trial
+            self.epsilon = math.cos(0.002 * self.trial)
 
         return None
 
@@ -92,10 +92,12 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
-        if not self.Q.get(state):
-            self.Q[state] = dict()
-            for action in self.valid_actions:
-                self.Q[state][action] = 0.0
+        # if not self.Q.get(state):
+        #     self.Q[state] = dict()
+        #     for action in self.valid_actions:
+        #         self.Q[state][action] = 0.0
+        if self.learning:
+            self.Q.setdefault(state, {action: 0.0 for action in self.valid_actions})
         return
 
 
@@ -139,7 +141,7 @@ class LearningAgent(Agent):
         ###########
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
-        self.Q[state][action] += self.alpha * (reward + self.get_maxQ(state) - self.Q[state][action])
+        self.Q[state][action] += self.alpha * (reward - self.Q[state][action])
 
         return
 
@@ -182,7 +184,8 @@ def run():
     # Follow the driving agent
     # Flags:
     #   enforce_deadline - set to True to enforce a deadline metric
-    env.set_primary_agent(agent, enforce_deadline=True)
+    # env.set_primary_agent(agent, enforce_deadline=True)
+    env.set_primary_agent(agent)
 
     ##############
     # Create the simulation
@@ -191,14 +194,15 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.0, log_metrics=True, display=False, optimized=True)
+    sim = Simulator(env, update_delay=0, log_metrics=True, display=False, optimized=True)
     
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=30, tolerance=0.011034114022456309)
+    # sim.run(n_test=30, tolerance=0.011034114022456309)
+    sim.run(n_test=30, tolerance=0.01)
 
 
 if __name__ == '__main__':
